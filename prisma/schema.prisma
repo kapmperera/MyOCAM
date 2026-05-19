@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Student {
+  id        String       @id
+  name      String
+  intake    String?
+  marks     MarkEntry[]
+  ocam      OCAMResult[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model Module {
+  id           String       @id @default(cuid())
+  courseCode   String
+  name         String
+  academicYear String
+  semester     String
+  marks        MarkEntry[]
+  ocam         OCAMResult[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([courseCode, academicYear, semester])
+}
+
+model MarkEntry {
+  id          String   @id @default(cuid())
+  studentId   String
+  moduleId    String
+  cat1Entry1  Float?
+  cat1Entry2  Float?
+  cat2Entry1  Float?
+  cat2Entry2  Float?
+  student     Student  @relation(fields: [studentId], references: [id])
+  module      Module   @relation(fields: [moduleId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([studentId, moduleId])
+}
+
+model OCAMResult {
+  id          String   @id @default(cuid())
+  studentId   String
+  moduleId    String
+  finalOCAM   Float?
+  grade       String?
+  passFail    String?
+  student     Student  @relation(fields: [studentId], references: [id])
+  module      Module   @relation(fields: [moduleId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([studentId, moduleId])
+}

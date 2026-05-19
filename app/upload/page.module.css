@@ -1,0 +1,223 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+}
+
+.header {
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.formSection {
+  padding: 24px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.inputGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputGroup label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.inputGroup input,
+.inputGroup select {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.inputGroup input:focus,
+.inputGroup select:focus {
+  border-color: var(--accent-primary);
+}
+
+.filesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .filesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.uploadGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.uploadBox {
+  position: relative;
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.uploadBox:hover {
+  border-color: var(--accent-primary);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.fileInput {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.uploadLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  pointer-events: none;
+}
+
+.fileIcon {
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.fileIconSelected {
+  color: var(--accent-success);
+  margin-bottom: 12px;
+}
+
+.uploadText {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.uploadSubtext {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.fileName {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--accent-success);
+  margin-bottom: 4px;
+  text-align: center;
+  word-break: break-all;
+}
+
+.fileSize {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.btnContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.alertSuccess {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  background: rgba(16, 185, 129, 0.1);
+  border-left: 4px solid var(--accent-success);
+  border-radius: 8px;
+  color: var(--text-primary);
+}
+
+.alertSuccess svg {
+  color: var(--accent-success);
+  flex-shrink: 0;
+}
+
+.alertError {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 4px solid var(--accent-danger);
+  border-radius: 8px;
+  color: var(--text-primary);
+}
+
+.alertError svg {
+  color: var(--accent-danger);
+  flex-shrink: 0;
+}
+
+.alertSuccess p, .alertError p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 4px;
+}
