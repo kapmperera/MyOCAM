@@ -221,3 +221,13 @@
   font-size: 14px;
   margin-top: 4px;
 }
+
+@media (max-width: 600px) {
+  .actions {
+    width: 100%;
+  }
+  .actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}

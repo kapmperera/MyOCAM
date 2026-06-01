@@ -9,13 +9,15 @@ import {
   BarChart3, 
   Settings,
   LogOut,
-  GraduationCap
+  GraduationCap,
+  History
 } from "lucide-react";
 import styles from "./Sidebar.module.css";
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Upload Data", href: "/upload", icon: UploadCloud },
+  { name: "Module History", href: "/modules", icon: History },
   { name: "CAT 1 Comparison", href: "/cat1", icon: FileSpreadsheet },
   { name: "CAT 2 Comparison", href: "/cat2", icon: FileSpreadsheet },
   { name: "OCAM Calculations", href: "/ocam", icon: GraduationCap },
@@ -23,12 +25,18 @@ const navItems = [
   { name: "Statistical Analysis", href: "/statistical-analysis", icon: BarChart3 },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }) {
   const pathname = usePathname();
 
   if (pathname === '/login') {
     return null;
   }
+
+  const handleLinkClick = () => {
+    if (onClose) {
+      onClose();
+    }
+  };
 
   return (
     <aside className={styles.sidebar}>
@@ -49,6 +57,7 @@ export default function Sidebar() {
               key={item.name} 
               href={item.href}
               className={`${styles.navItem} ${isActive ? styles.active : ""}`}
+              onClick={handleLinkClick}
             >
               <Icon size={20} />
               <span>{item.name}</span>
@@ -58,11 +67,15 @@ export default function Sidebar() {
       </nav>
 
       <div className={styles.footer}>
-        <button className={styles.navItem}>
+        <Link 
+          href="/settings" 
+          className={`${styles.navItem} ${pathname === "/settings" ? styles.active : ""}`}
+          onClick={handleLinkClick}
+        >
           <Settings size={20} />
           <span>Settings</span>
-        </button>
-        <button className={`${styles.navItem} ${styles.logout}`}>
+        </Link>
+        <button className={`${styles.navItem} ${styles.logout}`} onClick={handleLinkClick}>
           <LogOut size={20} />
           <span>Logout</span>
         </button>

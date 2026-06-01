@@ -3,7 +3,7 @@
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 
-export default function FilterDropdown({ paramName = "filter", options = [] }) {
+export default function FilterDropdown({ paramName = "filter", defaultLabel = "All", options = [] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -37,7 +37,7 @@ export default function FilterDropdown({ paramName = "filter", options = [] }) {
         cursor: "pointer"
       }}
     >
-      <option value="All">All Students</option>
+      <option value="All">{defaultLabel}</option>
       {options.map(opt => (
         <option key={opt.value} value={opt.value}>{opt.label}</option>
       ))}

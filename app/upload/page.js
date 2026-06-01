@@ -21,6 +21,7 @@ export default function UploadPage() {
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null); // 'success' | 'error'
+  const [mismatchModal, setMismatchModal] = useState(null);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -61,12 +62,44 @@ export default function UploadPage() {
         body: formPayload
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error("Upload failed");
+        throw new Error(data.error || "Upload failed");
       }
 
       setUploadStatus('success');
-      // Reset form conditionally or redirect
+
+      // Automatically select the newly processed module
+      if (data.moduleId) {
+        await fetch('/api/modules/select', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ moduleId: data.moduleId })
+        });
+      }
+      
+      if (
+        (data.mismatches && (data.mismatches.cat1 > 0 || data.mismatches.cat2 > 0)) ||
+        (data.regMismatches && (data.regMismatches.cat1.length > 0 || data.regMismatches.cat2.length > 0)) ||
+        (data.crossDatasetMismatches && data.crossDatasetMismatches.length > 0)
+      ) {
+        setMismatchModal({
+          cat1: data.mismatches.cat1,
+          cat2: data.mismatches.cat2,
+          regMismatches: data.regMismatches || { cat1: [], cat2: [] },
+          crossDatasetMismatches: data.crossDatasetMismatches || [],
+          moduleId: data.moduleId
+        });
+      }
+      
+      // Reset files
+      setFiles({
+        cat1Entry1: null,
+        cat1Entry2: null,
+        cat2Entry1: null,
+        cat2Entry2: null,
+      });
     } catch (error) {
       console.error(error);
       setUploadStatus('error');
@@ -194,6 +227,176 @@ export default function UploadPage() {
           </button>
         </div>
       </form>
+
+      {mismatchModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div className="glass-panel" style={{
+            maxWidth: '500px',
+            width: '100%',
+            padding: '32px',
+            borderRadius: '16px',
+            border: '1px solid rgba(245, 158, 11, 0.3)',
+            background: 'rgba(20, 20, 25, 0.95)',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              display: 'inline-flex',
+              padding: '16px',
+              borderRadius: '50%',
+              background: 'rgba(245, 158, 11, 0.1)',
+              color: '#f59e0b',
+              marginBottom: '20px'
+            }}>
+              <AlertCircle size={48} />
+            </div>
+            
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '12px', color: '#fff' }}>
+              Mark Mismatches Detected!
+            </h2>
+            
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '15px', lineHeight: '1.5' }}>
+              We successfully processed the XML files, but discovered differences between the verification entries.
+            </p>
+
+            <div style={{
+              background: 'rgba(0,0,0,0.2)',
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '28px',
+              textAlign: 'left',
+              border: '1px solid rgba(255,255,255,0.05)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              maxHeight: '260px',
+              overflowY: 'auto'
+            }}>
+              {/* Mark Mismatches */}
+              {((mismatchModal.cat1 || 0) > 0 || (mismatchModal.cat2 || 0) > 0) && (
+                <div>
+                  <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '8px', color: 'var(--accent-primary)' }}>
+                    Type: Mark Verification Mismatches
+                  </div>
+                  {mismatchModal.cat1 > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: 'var(--text-primary)', fontSize: '13px' }}>
+                      <span>⚠️ <strong>CAT 1 Comparison</strong></span>
+                      <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{mismatchModal.cat1} mismatches</span>
+                    </div>
+                  )}
+                  {mismatchModal.cat2 > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-primary)', fontSize: '13px' }}>
+                      <span>⚠️ <strong>CAT 2 Comparison</strong></span>
+                      <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{mismatchModal.cat2} mismatches</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Reg No Mismatches */}
+              {(((mismatchModal.regMismatches?.cat1 || []).length > 0) || ((mismatchModal.regMismatches?.cat2 || []).length > 0)) && (
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '8px', color: '#f59e0b' }}>
+                    Type: Registration Number Mismatch
+                  </div>
+                  
+                  {mismatchModal.regMismatches.cat1.length > 0 && (
+                    <div style={{ marginBottom: '8px' }}>
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                        📍 <strong>CAT 1 Comparison</strong> ({mismatchModal.regMismatches.cat1.length} unmatched):
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {mismatchModal.regMismatches.cat1.map(reg => (
+                          <span key={reg} style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
+                            {reg}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {mismatchModal.regMismatches.cat2.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                        📍 <strong>CAT 2 Comparison</strong> ({mismatchModal.regMismatches.cat2.length} unmatched):
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {mismatchModal.regMismatches.cat2.map(reg => (
+                          <span key={reg} style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
+                            {reg}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Cross-Dataset Reg Mismatches */}
+              {(mismatchModal.crossDatasetMismatches || []).length > 0 && (
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '8px', color: '#ef4444' }}>
+                    Type: CAT 1 vs CAT 2 Registration Mismatch (Total: {mismatchModal.crossDatasetMismatches.length})
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {mismatchModal.crossDatasetMismatches.map(item => (
+                      <span key={item.id} style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', border: '1px solid rgba(239, 68, 68, 0.4)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
+                        {item.id} ({item.type === 'missing_in_cat1' ? 'Missing in CAT 1' : 'Missing in CAT 2'})
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button 
+                onClick={() => setMismatchModal(null)}
+                style={{
+                  padding: '12px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'transparent',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600'
+                }}
+              >
+                Dismiss
+              </button>
+              <a 
+                href="/ocam"
+                style={{
+                  padding: '12px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'var(--accent-primary)',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  textDecoration: 'none'
+                }}
+              >
+                Go to OCAM Page
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

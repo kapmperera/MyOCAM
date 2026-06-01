@@ -2,14 +2,33 @@ import styles from "./page.module.css";
 import DashboardCards from "@/components/DashboardCards";
 import DashboardCharts from "@/components/DashboardCharts";
 import CatMarksAnalysis from "@/components/CatMarksAnalysis";
+import RecentModulesTable from "@/components/RecentModulesTable";
 import { prisma } from "@/lib/prisma";
+import { cookies } from "next/headers";
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const totalStudents = await prisma.student.count();
-  const totalModules = await prisma.module.count();
-  const allResults = await prisma.oCAMResult.findMany();
+  const cookieStore = await cookies();
+  let selectedModuleId = cookieStore.get('selectedModuleId')?.value;
+  
+  if (!selectedModuleId) {
+    const latestModule = await prisma.module.findFirst({ orderBy: { createdAt: 'desc' } });
+    if (latestModule) {
+      selectedModuleId = latestModule.id;
+    }
+  } else if (selectedModuleId === 'all') {
+    selectedModuleId = undefined;
+  }
+  
+  const moduleFilter = selectedModuleId ? { moduleId: selectedModuleId } : {};
+
+  const allResults = await prisma.oCAMResult.findMany({ where: moduleFilter });
+
+  const totalStudents = selectedModuleId 
+    ? allResults.length 
+    : await prisma.student.count({ where: { marks: { some: {} } } });
+  const totalModules = selectedModuleId ? 1 : await prisma.module.count();
   
   const eligibleStudents = allResults.filter(r => r.passFail === "Yes");
   const notEligibleCount = allResults.filter(r => r.passFail === "No").length;
@@ -31,7 +50,7 @@ export default async function Home() {
   const performanceBands = Object.keys(bands).map(key => ({ name: key, count: bands[key] }));
 
   // Compute Mark Ranges for CAT1 and CAT2
-  const allMarks = await prisma.markEntry.findMany();
+  const allMarks = await prisma.markEntry.findMany({ where: moduleFilter });
   const ranges = [
     { name: '0-20', CAT1: 0, CAT2: 0, min: 0, max: 20 },
     { name: '21-40', CAT1: 0, CAT2: 0, min: 21, max: 40 },
@@ -117,14 +136,35 @@ export default async function Home() {
 
   const recentModules = await prisma.module.findMany({
     orderBy: { createdAt: 'desc' },
-    take: 4
+    take: 10
   });
+
+  let currentModule = null;
+  if (selectedModuleId) {
+    currentModule = await prisma.module.findUnique({ where: { id: selectedModuleId } });
+  }
 
   return (
     <div className={styles.dashboardContainer}>
       <header className={styles.header}>
         <div>
-          <h1 className={styles.title}>Academic Dashboard</h1>
+          <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+            Academic Dashboard
+            {currentModule && (
+              <span style={{
+                fontSize: "16px", 
+                fontWeight: "normal", 
+                marginLeft: "12px", 
+                padding: "4px 10px", 
+                background: "rgba(59, 130, 246, 0.1)", 
+                border: "1px solid var(--accent-primary)", 
+                borderRadius: "20px", 
+                color: "var(--accent-primary)"
+              }}>
+                Viewing: {currentModule.courseCode} - {currentModule.name}
+              </span>
+            )}
+          </h1>
           <p className={styles.subtitle}>Welcome back, Admin. Here is the latest overview.</p>
         </div>
         <div className={styles.actions}>
@@ -145,36 +185,7 @@ export default async function Home() {
       </section>
       
       <section className={styles.recentActivity}>
-        <div className={`glass-panel ${styles.activityCard}`}>
-          <div className={styles.activityHeader}>
-            <h3>Recent Modules Processed</h3>
-            <button className={styles.viewAllBtn}>View All</button>
-          </div>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Module Name</th>
-                <th>Course Code</th>
-                <th>Academic Year</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentModules.length > 0 ? recentModules.map(m => (
-                <tr key={m.id}>
-                  <td>{m.name}</td>
-                  <td>{m.courseCode}</td>
-                  <td>{m.academicYear}</td>
-                  <td><span className={styles.statusSuccess}>Processed</span></td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan="4" style={{textAlign: "center", color: "var(--text-muted)"}}>No modules processed yet.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <RecentModulesTable recentModules={recentModules} selectedModuleId={selectedModuleId} />
       </section>
     </div>
   );
