@@ -19,10 +19,19 @@ export default async function StatisticalAnalysisPage() {
   }
   const moduleFilter = selectedModuleId ? { moduleId: selectedModuleId } : {};
 
-  const allResults = await prisma.oCAMResult.findMany({ where: moduleFilter });
+  const allResults = await prisma.oCAMResult.findMany({ 
+    where: moduleFilter,
+    include: {
+      student: true
+    }
+  });
   
-  // Extract just the raw marks for simulation
-  const marks = allResults.map(r => r.finalOCAM || 0);
+  // Map complete student details for simulation and individual offsets
+  const studentsData = allResults.map(r => ({
+    id: r.studentId,
+    name: r.student.name,
+    mark: r.finalOCAM || 0
+  }));
 
   let currentModule = null;
   if (selectedModuleId) {
@@ -50,12 +59,12 @@ export default async function StatisticalAnalysisPage() {
               </span>
             )}
           </h1>
-          <p className={styles.subtitle}>Dynamically adjust marks to fit a Gaussian (Normal) Distribution.</p>
+          <p className={styles.subtitle}>Dynamically analyze and adjust marks to fit a Gaussian (Normal) Distribution.</p>
         </div>
       </header>
 
       <section className={styles.recentActivity}>
-        <CurveSimulator rawMarks={marks} />
+        <CurveSimulator studentsData={studentsData} />
       </section>
     </div>
   );
