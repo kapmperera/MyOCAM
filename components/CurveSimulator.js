@@ -330,7 +330,7 @@ export default function CurveSimulator({ studentsData = [] }) {
 
     const dateStr = new Date().toLocaleString();
 
-    const studentRowsHtml = passFailStudentsPreview.map(s => {
+    const studentRowsHtml = filteredPassFailStudents.map(s => {
       const isPromoted = s.originalStatus === "Fail" && s.adjustedStatus === "Pass";
       const isDemoted = s.originalStatus === "Pass" && s.adjustedStatus === "Fail";
 
@@ -514,9 +514,15 @@ export default function CurveSimulator({ studentsData = [] }) {
 <body>
   <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
-      <div class="header">
+      <div class="header" style="flex: 1; min-width: 300px; margin-right: 16px;">
         <h1 class="header-title">OCAM Mark Adjustment & Status Shift Report</h1>
-        <div class="header-meta">Generated: ${dateStr} | Mode: Pass/Fail Target Solver</div>
+        <div class="header-meta" style="margin-top: 8px; font-size: 13px; color: #4b5563; line-height: 1.6;">
+          <strong>Generated:</strong> ${dateStr} &nbsp;|&nbsp; 
+          <strong>Mode:</strong> Pass/Fail Target Solver <br />
+          <strong>Sorting Method:</strong> ${sortPassFailByShift ? "Status Change First" : "Default Order"} &nbsp;|&nbsp; 
+          <strong>Active Search Filter:</strong> ${passFailSearchQuery ? `"${passFailSearchQuery}"` : "None"} &nbsp;|&nbsp; 
+          <strong>Records Displayed:</strong> ${filteredPassFailStudents.length} of ${total}
+        </div>
       </div>
       <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
     </div>
