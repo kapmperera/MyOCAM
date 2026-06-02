@@ -56,6 +56,7 @@ export default function CurveSimulator({ studentsData = [] }) {
   const [targetPassRate, setTargetPassRate] = useState(initialPassRate);
   const [passFailSearchQuery, setPassFailSearchQuery] = useState("");
   const [passFailPage, setPassFailPage] = useState(0);
+  const [sortPassFailByShift, setSortPassFailByShift] = useState(false);
 
   // Sync sliders
   const handlePassRateChange = (val) => {
@@ -267,11 +268,23 @@ export default function CurveSimulator({ studentsData = [] }) {
 
   // Filtered/paginated Pass/Fail lists
   const filteredPassFailStudents = useMemo(() => {
-    return passFailStudentsPreview.filter(s =>
+    let result = passFailStudentsPreview.filter(s =>
       s.id.toLowerCase().includes(passFailSearchQuery.toLowerCase()) ||
       s.name.toLowerCase().includes(passFailSearchQuery.toLowerCase())
     );
-  }, [passFailStudentsPreview, passFailSearchQuery]);
+    
+    if (sortPassFailByShift) {
+      result = [...result].sort((a, b) => {
+        const aHasShift = a.originalStatus !== a.adjustedStatus;
+        const bHasShift = b.originalStatus !== b.adjustedStatus;
+        if (aHasShift && !bHasShift) return -1;
+        if (!aHasShift && bHasShift) return 1;
+        return 0;
+      });
+    }
+    
+    return result;
+  }, [passFailStudentsPreview, passFailSearchQuery, sortPassFailByShift]);
 
   const paginatedPassFailStudents = useMemo(() => {
     const start = passFailPage * itemsPerPage;
@@ -1061,24 +1074,44 @@ export default function CurveSimulator({ studentsData = [] }) {
                 </p>
               </div>
 
-              <div style={{ position: "relative", minWidth: "250px" }}>
-                <Search style={{ position: "absolute", left: "12px", top: "12px", color: "var(--text-muted)" }} size={16} />
-                <input 
-                  type="text" 
-                  placeholder="Search Reg No. or Name..."
-                  value={passFailSearchQuery}
-                  onChange={e => { setPassFailSearchQuery(e.target.value); setPassFailPage(0); }}
-                  style={{
-                    width: "100%",
-                    background: "rgba(0,0,0,0.3)",
-                    border: "var(--glass-border)",
-                    padding: "10px 16px 10px 36px",
-                    borderRadius: "8px",
-                    color: "var(--text-primary)",
-                    fontSize: "14px",
-                    outline: "none"
-                  }}
-                />
+              <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                {sortPassFailByShift ? (
+                  <button 
+                    className="btn-primary" 
+                    onClick={() => { setSortPassFailByShift(false); setPassFailPage(0); }}
+                    style={{ padding: "10px 16px", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px", border: "none", backgroundColor: "var(--accent-secondary)", borderRadius: "8px", cursor: "pointer" }}
+                  >
+                    🔄 Restore Default Order
+                  </button>
+                ) : (
+                  <button 
+                    className="btn-primary" 
+                    onClick={() => { setSortPassFailByShift(true); setPassFailPage(0); }}
+                    style={{ padding: "10px 16px", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px", border: "none", backgroundColor: "var(--accent-primary)", borderRadius: "8px", cursor: "pointer" }}
+                  >
+                    ⚠️ Sort Status Shifts First
+                  </button>
+                )}
+
+                <div style={{ position: "relative", minWidth: "250px" }}>
+                  <Search style={{ position: "absolute", left: "12px", top: "12px", color: "var(--text-muted)" }} size={16} />
+                  <input 
+                    type="text" 
+                    placeholder="Search Reg No. or Name..."
+                    value={passFailSearchQuery}
+                    onChange={e => { setPassFailSearchQuery(e.target.value); setPassFailPage(0); }}
+                    style={{
+                      width: "100%",
+                      background: "rgba(0,0,0,0.3)",
+                      border: "var(--glass-border)",
+                      padding: "10px 16px 10px 36px",
+                      borderRadius: "8px",
+                      color: "var(--text-primary)",
+                      fontSize: "14px",
+                      outline: "none"
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
