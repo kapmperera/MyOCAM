@@ -933,9 +933,9 @@ export default function CurveSimulator({ studentsData = [] }) {
               </div>
 
               <button 
-                className="btn-secondary" 
+                className="btn-primary" 
                 onClick={() => handlePassRateChange(initialPassRate)}
-                style={{ padding: "8px 16px", fontSize: "13px", display: "flex", alignItems: "center", justifyContent: "center", width: "100%", background: "rgba(255,255,255,0.05)" }}
+                style={{ padding: "10px 16px", fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center", width: "100%", backgroundColor: "var(--accent-secondary)", border: "none" }}
               >
                 Reset to Current Rate ({initialPassRate}%)
               </button>
