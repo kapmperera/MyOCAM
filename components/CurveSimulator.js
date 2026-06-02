@@ -1439,8 +1439,8 @@ export default function CurveSimulator({ studentsData = [] }) {
                 <thead>
                   <tr style={{ background: "rgba(255,255,255,0.02)" }}>
                     <th>Reg No.</th>
-                    <th>Common Mark Offset</th>
                     <th>Original OCAM Mark</th>
+                    <th>Common Mark Offset</th>
                     <th>Adjusted OCAM Mark</th>
                     <th>Original Status</th>
                     <th>Projected Status</th>
@@ -1457,6 +1457,7 @@ export default function CurveSimulator({ studentsData = [] }) {
                         style={hasStatusShift ? { background: "rgba(16, 185, 129, 0.05)", borderLeft: "3px solid var(--accent-success)" } : {}}
                       >
                         <td style={{ fontFamily: "monospace", fontWeight: "600" }}>{s.id}</td>
+                        <td>{s.originalMark.toFixed(1)}</td>
                         <td style={{ 
                           fontFamily: "monospace", 
                           fontWeight: "700", 
@@ -1464,7 +1465,6 @@ export default function CurveSimulator({ studentsData = [] }) {
                         }}>
                           {offsetVal >= 0 ? `+${offsetVal.toFixed(1)}` : offsetVal.toFixed(1)}
                         </td>
-                        <td>{s.originalMark.toFixed(1)}</td>
                         <td style={{ fontWeight: "700" }}>{s.adjustedMark.toFixed(1)}</td>
                         <td>
                           <span style={{
