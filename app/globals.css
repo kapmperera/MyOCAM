@@ -272,3 +272,41 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* Global Table & .table Styles */
+table, .table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+table th, .table th,
+table td, .table td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  word-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+table th, .table th {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+table td, .table td {
+  color: var(--text-primary);
+  font-size: 15px;
+}
+
+table tbody tr, .table tbody tr {
+  transition: background-color 0.2s;
+}
+
+table tbody tr:hover, .table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
