@@ -67,6 +67,7 @@ export default function RecentModulesTable({ recentModules, selectedModuleId }) 
               <th>Course Code</th>
               <th>Academic Year</th>
               <th>Processed Date</th>
+              <th>Total Students</th>
               <th style={{ textAlign: "right" }}>Actions</th>
             </tr>
           </thead>
@@ -88,6 +89,18 @@ export default function RecentModulesTable({ recentModules, selectedModuleId }) 
                       hour: '2-digit',
                       minute: '2-digit'
                     }) : "Loading..."}
+                  </td>
+                  <td>
+                    <span style={{ 
+                      background: "rgba(59, 130, 246, 0.1)", 
+                      color: "var(--accent-primary)", 
+                      padding: "4px 10px", 
+                      borderRadius: "12px", 
+                      fontSize: "13px", 
+                      fontWeight: "600" 
+                    }}>
+                      {m._count?.ocam || 0} Students
+                    </span>
                   </td>
                   <td style={{ textAlign: "right", display: "flex", gap: "8px", justifyContent: "flex-end" }}>
                     {!isSelected ? (
@@ -114,7 +127,7 @@ export default function RecentModulesTable({ recentModules, selectedModuleId }) 
               );
             }) : (
               <tr>
-                <td colSpan="5" style={{textAlign: "center", color: "var(--text-muted)"}}>No modules processed yet.</td>
+                <td colSpan="6" style={{textAlign: "center", color: "var(--text-muted)"}}>No modules processed yet.</td>
               </tr>
             )}
           </tbody>

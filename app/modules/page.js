@@ -11,7 +11,12 @@ export default async function ModulesPage() {
 
   // Fetch ALL modules without a limit
   const allModules = await prisma.module.findMany({
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    include: {
+      _count: {
+        select: { ocam: true }
+      }
+    }
   });
 
   return (

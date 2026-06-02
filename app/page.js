@@ -136,7 +136,12 @@ export default async function Home() {
 
   const recentModules = await prisma.module.findMany({
     orderBy: { createdAt: 'desc' },
-    take: 10
+    take: 10,
+    include: {
+      _count: {
+        select: { ocam: true }
+      }
+    }
   });
 
   let currentModule = null;
