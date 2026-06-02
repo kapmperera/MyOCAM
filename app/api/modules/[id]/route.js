@@ -37,3 +37,29 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ error: 'Internal server error during deletion.' }, { status: 500 });
   }
 }
+
+export async function PATCH(request, { params }) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    const { name, courseCode, academicYear } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Module ID is required' }, { status: 400 });
+    }
+
+    const updatedModule = await prisma.module.update({
+      where: { id },
+      data: {
+        name,
+        courseCode,
+        academicYear,
+      },
+    });
+
+    return NextResponse.json({ success: true, module: updatedModule });
+  } catch (error) {
+    console.error("Update Module API Error:", error);
+    return NextResponse.json({ error: 'Internal server error during update.' }, { status: 500 });
+  }
+}

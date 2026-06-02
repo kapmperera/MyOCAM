@@ -9,6 +9,11 @@ export default function RecentModulesTable({ recentModules, selectedModuleId }) 
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
+  const [editingModuleId, setEditingModuleId] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editCourseCode, setEditCourseCode] = useState("");
+  const [editAcademicYear, setEditAcademicYear] = useState("");
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -43,6 +48,44 @@ export default function RecentModulesTable({ recentModules, selectedModuleId }) 
     }
   };
 
+  const startEdit = (module) => {
+    setEditingModuleId(module.id);
+    setEditName(module.name);
+    setEditCourseCode(module.courseCode);
+    setEditAcademicYear(module.academicYear);
+  };
+
+  const cancelEdit = () => {
+    setEditingModuleId(null);
+  };
+
+  const handleSave = async (moduleId) => {
+    if (!editName || !editCourseCode || !editAcademicYear) {
+      alert("All fields are required.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/modules/${moduleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editName,
+          courseCode: editCourseCode,
+          academicYear: editAcademicYear
+        })
+      });
+      if (res.ok) {
+        setEditingModuleId(null);
+        router.refresh();
+      } else {
+        alert("Failed to save changes.");
+      }
+    } catch (error) {
+      console.error("Failed to save module details", error);
+    }
+  };
+
   return (
     <div className={`glass-panel ${styles.activityCard}`}>
       <div className={styles.activityHeader}>
@@ -74,13 +117,75 @@ export default function RecentModulesTable({ recentModules, selectedModuleId }) 
           <tbody>
             {recentModules.length > 0 ? recentModules.map(m => {
               const isSelected = m.id === selectedModuleId;
+              const isEditingThisRow = editingModuleId === m.id;
+              
               return (
                 <tr key={m.id} style={isSelected ? { backgroundColor: "rgba(59, 130, 246, 0.1)" } : {}}>
                   <td>
-                    {m.name} {isSelected && <span style={{fontSize: "12px", marginLeft: "8px", color: "var(--accent-primary)"}}>(Selected)</span>}
+                    {isEditingThisRow ? (
+                      <input 
+                        type="text" 
+                        value={editName} 
+                        onChange={e => setEditName(e.target.value)} 
+                        style={{
+                          background: "rgba(0,0,0,0.3)",
+                          border: "var(--glass-border)",
+                          padding: "6px 10px",
+                          borderRadius: "6px",
+                          color: "var(--text-primary)",
+                          width: "90%",
+                          fontSize: "14px",
+                          outline: "none"
+                        }}
+                      />
+                    ) : (
+                      <>
+                        {m.name} {isSelected && <span style={{fontSize: "12px", marginLeft: "8px", color: "var(--accent-primary)"}}>(Selected)</span>}
+                      </>
+                    )}
                   </td>
-                  <td>{m.courseCode}</td>
-                  <td>{m.academicYear}</td>
+                  <td>
+                    {isEditingThisRow ? (
+                      <input 
+                        type="text" 
+                        value={editCourseCode} 
+                        onChange={e => setEditCourseCode(e.target.value)} 
+                        style={{
+                          background: "rgba(0,0,0,0.3)",
+                          border: "var(--glass-border)",
+                          padding: "6px 10px",
+                          borderRadius: "6px",
+                          color: "var(--text-primary)",
+                          width: "90%",
+                          fontSize: "14px",
+                          outline: "none"
+                        }}
+                      />
+                    ) : (
+                      m.courseCode
+                    )}
+                  </td>
+                  <td>
+                    {isEditingThisRow ? (
+                      <input 
+                        type="text" 
+                        value={editAcademicYear} 
+                        onChange={e => setEditAcademicYear(e.target.value)} 
+                        style={{
+                          background: "rgba(0,0,0,0.3)",
+                          border: "var(--glass-border)",
+                          padding: "6px 10px",
+                          borderRadius: "6px",
+                          color: "var(--text-primary)",
+                          width: "90%",
+                          fontSize: "14px",
+                          outline: "none"
+                        }}
+                      />
+                    ) : (
+                      m.academicYear
+                    )}
+                  </td>
                   <td style={{ color: "var(--text-muted)", fontSize: "13px" }}>
                     {mounted ? new Date(m.createdAt).toLocaleString(undefined, {
                       year: 'numeric',
@@ -103,25 +208,52 @@ export default function RecentModulesTable({ recentModules, selectedModuleId }) 
                     </span>
                   </td>
                   <td style={{ textAlign: "right", display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-                    {!isSelected ? (
-                      <button 
-                        onClick={() => handleSelect(m.id)}
-                        style={{ background: "transparent", border: "1px solid var(--accent-primary)", color: "var(--accent-primary)", padding: "4px 8px", borderRadius: "4px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
-                      >
-                        <Eye size={14} /> View
-                      </button>
+                    {isEditingThisRow ? (
+                      <>
+                        <button 
+                          onClick={() => handleSave(m.id)}
+                          style={{ background: "var(--accent-success)", border: "none", color: "#ffffff", padding: "4px 8px", borderRadius: "4px", cursor: "pointer", fontWeight: "600" }}
+                        >
+                          Save
+                        </button>
+                        <button 
+                          onClick={cancelEdit}
+                          style={{ background: "transparent", border: "1px solid var(--text-muted)", color: "var(--text-muted)", padding: "4px 8px", borderRadius: "4px", cursor: "pointer" }}
+                        >
+                          Cancel
+                        </button>
+                      </>
                     ) : (
-                      <span style={{ color: "var(--accent-success)", padding: "4px 8px", display: "flex", alignItems: "center", gap: "4px" }}>
-                        Viewing
-                      </span>
+                      <>
+                        {!isSelected ? (
+                          <button 
+                            onClick={() => handleSelect(m.id)}
+                            style={{ background: "transparent", border: "1px solid var(--accent-primary)", color: "var(--accent-primary)", padding: "4px 8px", borderRadius: "4px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                          >
+                            <Eye size={14} /> View
+                          </button>
+                        ) : (
+                          <>
+                            <button 
+                              onClick={() => startEdit(m)}
+                              style={{ background: "transparent", border: "1px solid var(--accent-primary)", color: "var(--accent-primary)", padding: "4px 8px", borderRadius: "4px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                            >
+                              Edit
+                            </button>
+                            <span style={{ color: "var(--accent-success)", padding: "4px 8px", display: "flex", alignItems: "center", gap: "4px" }}>
+                              Viewing
+                            </span>
+                          </>
+                        )}
+                        
+                        <button 
+                          onClick={() => handleDelete(m.id)}
+                          style={{ background: "transparent", border: "1px solid var(--accent-danger)", color: "var(--accent-danger)", padding: "4px 8px", borderRadius: "4px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                        >
+                          <Trash2 size={14} /> Delete
+                        </button>
+                      </>
                     )}
-                    
-                    <button 
-                      onClick={() => handleDelete(m.id)}
-                      style={{ background: "transparent", border: "1px solid var(--accent-danger)", color: "var(--accent-danger)", padding: "4px 8px", borderRadius: "4px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
-                    >
-                      <Trash2 size={14} /> Delete
-                    </button>
                   </td>
                 </tr>
               );
