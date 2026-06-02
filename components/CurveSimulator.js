@@ -931,6 +931,14 @@ export default function CurveSimulator({ studentsData = [] }) {
                 <span style={{ color: "var(--text-secondary)" }}>Desired Fail Percentage (Locked)</span>
                 <span style={{ fontWeight: "700", color: "var(--accent-danger)" }}>{(100 - targetPassRate).toFixed(1)}%</span>
               </div>
+
+              <button 
+                className="btn-secondary" 
+                onClick={() => handlePassRateChange(initialPassRate)}
+                style={{ padding: "8px 16px", fontSize: "13px", display: "flex", alignItems: "center", justifyContent: "center", width: "100%", background: "rgba(255,255,255,0.05)" }}
+              >
+                Reset to Current Rate ({initialPassRate}%)
+              </button>
             </div>
 
             {/* Resolved Adjustment & Shift Recommendation */}
