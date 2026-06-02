@@ -308,6 +308,287 @@ export default function CurveSimulator({ studentsData = [] }) {
     setScaleFactor(1);
   };
 
+  const handleApplyAdjustment = () => {
+    const total = passFailStudentsPreview.length;
+    if (total === 0) return;
+
+    const originalPasses = passFailStudentsPreview.filter(s => s.originalStatus === "Pass").length;
+    const originalFails = total - originalPasses;
+    const projectedPasses = passFailStudentsPreview.filter(s => s.adjustedStatus === "Pass").length;
+    const projectedFails = total - projectedPasses;
+    
+    const promoted = passFailStudentsPreview.filter(s => s.originalStatus === "Fail" && s.adjustedStatus === "Pass").length;
+    const demoted = passFailStudentsPreview.filter(s => s.originalStatus === "Pass" && s.adjustedStatus === "Fail").length;
+    const totalAffected = promoted + demoted;
+
+    const originalPassRate = ((originalPasses / total) * 100).toFixed(1);
+    const originalFailRate = (100 - parseFloat(originalPassRate)).toFixed(1);
+    const projectedPassRate = ((projectedPasses / total) * 100).toFixed(1);
+    const projectedFailRate = (100 - parseFloat(projectedPassRate)).toFixed(1);
+    const adjustment = passFailSolverResult.adjustment;
+    const offsetStr = adjustment >= 0 ? `+${adjustment.toFixed(1)}` : `${adjustment.toFixed(1)}`;
+
+    const dateStr = new Date().toLocaleString();
+
+    const studentRowsHtml = passFailStudentsPreview.map(s => {
+      const isPromoted = s.originalStatus === "Fail" && s.adjustedStatus === "Pass";
+      const isDemoted = s.originalStatus === "Pass" && s.adjustedStatus === "Fail";
+
+      let rowBg = "#ffffff";
+      let rowColor = "#333333";
+      let statusChangeText = "No Change";
+      let statusChangeBadgeBg = "#f3f4f6";
+      let statusChangeBadgeColor = "#4b5563";
+
+      if (isPromoted) {
+        rowBg = "#ecfdf5";
+        rowColor = "#065f46";
+        statusChangeText = "Fail ➔ Pass (Promoted)";
+        statusChangeBadgeBg = "#d1fae5";
+        statusChangeBadgeColor = "#065f46";
+      } else if (isDemoted) {
+        rowBg = "#fef2f2";
+        rowColor = "#991b1b";
+        statusChangeText = "Pass ➔ Fail (Demoted)";
+        statusChangeBadgeBg = "#fee2e2";
+        statusChangeBadgeColor = "#991b1b";
+      }
+
+      return `
+        <tr style="background-color: ${rowBg}; color: ${rowColor}; border-bottom: 1px solid #e5e7eb;">
+          <td style="padding: 10px 12px; font-family: monospace; font-weight: bold;">${s.id}</td>
+          <td style="padding: 10px 12px; text-align: center;">${s.originalMark.toFixed(1)}</td>
+          <td style="padding: 10px 12px; text-align: center; font-weight: bold; color: ${adjustment > 0 ? '#10b981' : adjustment < 0 ? '#ef4444' : '#6b7280'}">${offsetStr}</td>
+          <td style="padding: 10px 12px; text-align: center; font-weight: bold;">${s.adjustedMark.toFixed(1)}</td>
+          <td style="padding: 10px 12px; text-align: center;">
+            <span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; background-color: ${s.originalStatus === 'Pass' ? '#d1fae5' : '#fee2e2'}; color: ${s.originalStatus === 'Pass' ? '#065f46' : '#991b1b'}">
+              ${s.originalStatus}
+            </span>
+          </td>
+          <td style="padding: 10px 12px; text-align: center;">
+            <span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; background-color: ${s.adjustedStatus === 'Pass' ? '#d1fae5' : '#fee2e2'}; color: ${s.adjustedStatus === 'Pass' ? '#065f46' : '#991b1b'}">
+              ${s.adjustedStatus}
+            </span>
+          </td>
+          <td style="padding: 10px 12px; text-align: center;">
+            <span style="padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; background-color: ${statusChangeBadgeBg}; color: ${statusChangeBadgeColor}">
+              ${statusChangeText}
+            </span>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OCAM Common Mark Adjustment & Status Shift Report</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1f2937;
+      background-color: #f9fafb;
+      margin: 0;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .header {
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+    }
+    .header-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #111827;
+      margin: 0;
+    }
+    .header-meta {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .card {
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background-color: #fcfcfd;
+    }
+    .card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .card-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: #111827;
+    }
+    .card-accent-green {
+      border-left: 4px solid #10b981;
+      background-color: #f0fdf4;
+    }
+    .card-accent-red {
+      border-left: 4px solid #ef4444;
+      background-color: #fef2f2;
+    }
+    .card-accent-blue {
+      border-left: 4px solid #3b82f6;
+      background-color: #eff6ff;
+    }
+    .table-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    th {
+      background-color: #f3f4f6;
+      color: #374151;
+      font-weight: 700;
+      text-align: left;
+      padding: 12px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .btn-print {
+      display: inline-flex;
+      align-items: center;
+      background-color: #111827;
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      margin-bottom: 20px;
+    }
+    .btn-print:hover {
+      background-color: #1f2937;
+    }
+    @media print {
+      body {
+        background-color: #ffffff;
+        padding: 0;
+      }
+      .container {
+        box-shadow: none;
+        padding: 0;
+      }
+      .btn-print {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
+      <div class="header">
+        <h1 class="header-title">OCAM Mark Adjustment & Status Shift Report</h1>
+        <div class="header-meta">Generated: ${dateStr} | Mode: Pass/Fail Target Solver</div>
+      </div>
+      <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+    </div>
+
+    <div class="grid">
+      <div class="card card-accent-blue">
+        <div class="card-title">Applied Adjustment</div>
+        <div class="card-value" style="color: ${adjustment > 0 ? '#10b981' : adjustment < 0 ? '#ef4444' : '#111827'}">${offsetStr} Marks</div>
+      </div>
+      <div class="card card-accent-green">
+        <div class="card-title">Promoted (Fail ➔ Pass)</div>
+        <div class="card-value">${promoted} Students</div>
+      </div>
+      <div class="card card-accent-red">
+        <div class="card-title">Demoted (Pass ➔ Fail)</div>
+        <div class="card-value">${demoted} Students</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Total Affected</div>
+        <div class="card-value">${totalAffected} / ${total}</div>
+      </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+      <div class="card">
+        <div class="card-title">Original Performance Metrics</div>
+        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+          <span>Pass Rate: <strong>${originalPassRate}%</strong> (${originalPasses} Students)</span>
+          <span>Fail Rate: <strong>${originalFailRate}%</strong> (${originalFails} Students)</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Projected Performance Metrics</div>
+        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+          <span>Pass Rate: <strong>${projectedPassRate}%</strong> (${projectedPasses} Students)</span>
+          <span>Fail Rate: <strong>${projectedFailRate}%</strong> (${projectedFails} Students)</span>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="table-title">Student Adjustment & Status Shift Log</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Reg No.</th>
+          <th style="text-align: center;">Original Mark</th>
+          <th style="text-align: center;">Adjustment Offset</th>
+          <th style="text-align: center;">Adjusted Mark</th>
+          <th style="text-align: center;">Original Status</th>
+          <th style="text-align: center;">New Status</th>
+          <th style="text-align: center;">Status Shift</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${studentRowsHtml}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `OCAM_Mark_Adjustment_Report_${new Date().toISOString().slice(0,10)}.html`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const getFitGrade = (score) => {
     if (score >= 85) return { text: "Excellent Normal Alignment", color: "var(--accent-success)" };
     if (score >= 70) return { text: "Good Normal Fit", color: "var(--accent-primary)" };
@@ -1077,6 +1358,14 @@ export default function CurveSimulator({ studentsData = [] }) {
               </div>
 
               <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                <button 
+                  className="btn-primary" 
+                  onClick={handleApplyAdjustment}
+                  style={{ padding: "10px 16px", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px", border: "none", backgroundColor: "var(--accent-success)", borderRadius: "8px", cursor: "pointer", color: "#ffffff", fontWeight: "600" }}
+                >
+                  📥 Apply Adjustment
+                </button>
+
                 {sortPassFailByShift ? (
                   <button 
                     className="btn-primary" 
@@ -1150,7 +1439,7 @@ export default function CurveSimulator({ studentsData = [] }) {
                 <thead>
                   <tr style={{ background: "rgba(255,255,255,0.02)" }}>
                     <th>Reg No.</th>
-                    <th>Student Name</th>
+                    <th>Common Mark Offset</th>
                     <th>Original OCAM Mark</th>
                     <th>Adjusted OCAM Mark</th>
                     <th>Original Status</th>
@@ -1161,13 +1450,20 @@ export default function CurveSimulator({ studentsData = [] }) {
                 <tbody>
                   {filteredPassFailStudents.length > 0 ? paginatedPassFailStudents.map((s, idx) => {
                     const hasStatusShift = s.originalStatus !== s.adjustedStatus;
+                    const offsetVal = s.offset || 0;
                     return (
                       <tr 
                         key={`${s.id}-pf-${idx}`}
                         style={hasStatusShift ? { background: "rgba(16, 185, 129, 0.05)", borderLeft: "3px solid var(--accent-success)" } : {}}
                       >
                         <td style={{ fontFamily: "monospace", fontWeight: "600" }}>{s.id}</td>
-                        <td>{s.name}</td>
+                        <td style={{ 
+                          fontFamily: "monospace", 
+                          fontWeight: "700", 
+                          color: offsetVal > 0 ? "var(--accent-success)" : offsetVal < 0 ? "var(--accent-danger)" : "var(--text-muted)" 
+                        }}>
+                          {offsetVal >= 0 ? `+${offsetVal.toFixed(1)}` : offsetVal.toFixed(1)}
+                        </td>
                         <td>{s.originalMark.toFixed(1)}</td>
                         <td style={{ fontWeight: "700" }}>{s.adjustedMark.toFixed(1)}</td>
                         <td>
