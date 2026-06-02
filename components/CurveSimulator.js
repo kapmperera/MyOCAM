@@ -57,6 +57,7 @@ export default function CurveSimulator({ studentsData = [] }) {
   const [passFailSearchQuery, setPassFailSearchQuery] = useState("");
   const [passFailPage, setPassFailPage] = useState(0);
   const [sortPassFailByShift, setSortPassFailByShift] = useState(false);
+  const [passFailItemsPerPage, setPassFailItemsPerPage] = useState(10);
 
   // Sync sliders
   const handlePassRateChange = (val) => {
@@ -287,9 +288,10 @@ export default function CurveSimulator({ studentsData = [] }) {
   }, [passFailStudentsPreview, passFailSearchQuery, sortPassFailByShift]);
 
   const paginatedPassFailStudents = useMemo(() => {
-    const start = passFailPage * itemsPerPage;
-    return filteredPassFailStudents.slice(start, start + itemsPerPage);
-  }, [filteredPassFailStudents, passFailPage]);
+    const limit = passFailItemsPerPage === -1 ? filteredPassFailStudents.length : passFailItemsPerPage;
+    const start = passFailPage * limit;
+    return filteredPassFailStudents.slice(start, start + limit);
+  }, [filteredPassFailStudents, passFailPage, passFailItemsPerPage]);
 
   // Solve optimal uniform cohort recommendation (Gaussian)
   const uniformRecommendation = useMemo(() => {
@@ -1093,6 +1095,34 @@ export default function CurveSimulator({ studentsData = [] }) {
                   </button>
                 )}
 
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "13px", color: "var(--text-muted)", whiteSpace: "nowrap" }}>Show:</span>
+                  <select 
+                    value={passFailItemsPerPage}
+                    onChange={e => {
+                      setPassFailItemsPerPage(Number(e.target.value));
+                      setPassFailPage(0);
+                    }}
+                    style={{
+                      background: "rgba(0,0,0,0.3)",
+                      border: "var(--glass-border)",
+                      padding: "10px 16px",
+                      borderRadius: "8px",
+                      color: "var(--text-primary)",
+                      fontSize: "14px",
+                      outline: "none",
+                      cursor: "pointer",
+                      fontFamily: "inherit"
+                    }}
+                  >
+                    <option value={10} style={{ background: "#181825", color: "#cdd6f4" }}>10 rows</option>
+                    <option value={25} style={{ background: "#181825", color: "#cdd6f4" }}>25 rows</option>
+                    <option value={50} style={{ background: "#181825", color: "#cdd6f4" }}>50 rows</option>
+                    <option value={100} style={{ background: "#181825", color: "#cdd6f4" }}>100 rows</option>
+                    <option value={-1} style={{ background: "#181825", color: "#cdd6f4" }}>All records</option>
+                  </select>
+                </div>
+
                 <div style={{ position: "relative", minWidth: "250px" }}>
                   <Search style={{ position: "absolute", left: "12px", top: "12px", color: "var(--text-muted)" }} size={16} />
                   <input 
@@ -1185,31 +1215,37 @@ export default function CurveSimulator({ studentsData = [] }) {
             </div>
 
             {/* Pagination */}
-            {filteredPassFailStudents.length > itemsPerPage && (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px" }}>
-                <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                  Showing {passFailPage * itemsPerPage + 1} - {Math.min((passFailPage + 1) * itemsPerPage, filteredPassFailStudents.length)} of {filteredPassFailStudents.length} Students
-                </span>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button 
-                    className="btn-secondary"
-                    disabled={passFailPage === 0}
-                    onClick={() => setPassFailPage(p => p - 1)}
-                    style={{ padding: "6px 12px", fontSize: "13px" }}
-                  >
-                    Previous
-                  </button>
-                  <button 
-                    className="btn-secondary"
-                    disabled={(passFailPage + 1) * itemsPerPage >= filteredPassFailStudents.length}
-                    onClick={() => setPassFailPage(p => p + 1)}
-                    style={{ padding: "6px 12px", fontSize: "13px" }}
-                  >
-                    Next
-                  </button>
+            {(() => {
+              const passFailLimit = passFailItemsPerPage === -1 ? filteredPassFailStudents.length : passFailItemsPerPage;
+              return filteredPassFailStudents.length > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", flexWrap: "wrap", gap: "12px" }}>
+                  <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+                    Showing {filteredPassFailStudents.length > 0 ? (passFailPage * passFailLimit + 1) : 0} - {Math.min((passFailPage + 1) * passFailLimit, filteredPassFailStudents.length)} of {filteredPassFailStudents.length} Students
+                  </span>
+                  
+                  {passFailItemsPerPage !== -1 && filteredPassFailStudents.length > passFailLimit && (
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button 
+                        className="btn-secondary"
+                        disabled={passFailPage === 0}
+                        onClick={() => setPassFailPage(p => p - 1)}
+                        style={{ padding: "6px 12px", fontSize: "13px" }}
+                      >
+                        Previous
+                      </button>
+                      <button 
+                        className="btn-secondary"
+                        disabled={(passFailPage + 1) * passFailLimit >= filteredPassFailStudents.length}
+                        onClick={() => setPassFailPage(p => p + 1)}
+                        style={{ padding: "6px 12px", fontSize: "13px" }}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </>
       )}
