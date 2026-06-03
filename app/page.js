@@ -31,14 +31,33 @@ export default async function Home() {
     : await prisma.student.count({ where: { marks: { some: {} } } });
   const totalModules = selectedModuleId ? 1 : await prisma.module.count();
   
-  const eligibleStudents = allResults.filter(r => r.passFail === "Yes");
-  const notEligibleCount = allResults.filter(r => r.passFail === "No").length;
-  const absentCount = allResults.filter(r => r.passFail === "AB").length;
+  const allMarks = await prisma.markEntry.findMany({ where: moduleFilter });
 
-  const totalEligibleMarks = eligibleStudents.reduce((acc, curr) => acc + (curr.finalOCAM || 0), 0);
-  const avgOCAM = eligibleStudents.length > 0 ? (totalEligibleMarks / eligibleStudents.length).toFixed(1) : 0;
-  
-  const passRate = allResults.length > 0 ? Math.round((eligibleStudents.length / allResults.length) * 100) : 0;
+  let eligibleCount = 0;
+  let notEligibleCount = 0;
+  let absentCount = 0;
+  let totalEligibleMarks = 0;
+
+  allMarks.forEach(m => {
+    const cat1 = Math.max(m.cat1Entry1 || 0, m.cat1Entry2 || 0);
+    const cat2 = Math.max(m.cat2Entry1 || 0, m.cat2Entry2 || 0);
+    const cat1Weight = cat1 >= cat2 ? cat1 * 0.60 : cat1 * 0.40;
+    const cat2Weight = cat1 >= cat2 ? cat2 * 0.40 : cat2 * 0.60;
+    const ocamFinal = cat1Weight + cat2Weight;
+    const ocamRounded = Math.round(ocamFinal);
+
+    if (cat1 === 0 && cat2 === 0) {
+      absentCount++;
+    } else if (ocamRounded >= 35) {
+      eligibleCount++;
+      totalEligibleMarks += ocamRounded;
+    } else {
+      notEligibleCount++;
+    }
+  });
+
+  const avgOCAM = eligibleCount > 0 ? (totalEligibleMarks / eligibleCount).toFixed(1) : 0;
+  const passRate = allResults.length > 0 ? Math.round((eligibleCount / allResults.length) * 100) : 0;
 
 
   // Compute Performance Bands
@@ -51,7 +70,6 @@ export default async function Home() {
   const performanceBands = Object.keys(bands).map(key => ({ name: key, count: bands[key] }));
 
   // Compute Mark Ranges for CAT1 and CAT2
-  const allMarks = await prisma.markEntry.findMany({ where: moduleFilter });
   const ranges = [
     { name: '0-20', CAT1: 0, CAT2: 0, min: 0, max: 20 },
     { name: '21-40', CAT1: 0, CAT2: 0, min: 21, max: 40 },
@@ -129,6 +147,7 @@ export default async function Home() {
     totalModules,
     avgMark: avgOCAM,
     passRate,
+    eligibleCount,
     absentCount,
     notEligibleCount,
     cat1AbsentCount,
@@ -186,7 +205,7 @@ export default async function Home() {
           <p className={styles.subtitle}>Welcome back, Admin. Here is the latest overview.</p>
         </div>
         <div className={styles.actions}>
-          <ExportReportButton />
+          <ExportReportButton courseCode={currentModule?.courseCode || "N_A"} />
         </div>
       </header>
 

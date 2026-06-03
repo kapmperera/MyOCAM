@@ -6,7 +6,7 @@ import { Users, BookOpen, GraduationCap, TrendingUp, TrendingDown, Award } from 
 export default function DashboardCards({ initialStats }) {
   const stats = [
     { title: "Total Students", value: initialStats?.totalStudents || "0", icon: Users, color: "var(--accent-primary)", trend: "" },
-    { title: "Eligible Students", value: Math.round((initialStats?.passRate || 0) * (initialStats?.totalStudents || 0) / 100), icon: BookOpen, color: "var(--accent-secondary)", trend: "" },
+    { title: "Eligible Students", value: initialStats?.eligibleCount || "0", icon: BookOpen, color: "var(--accent-secondary)", trend: "" },
     { title: "Avg OCAM (Eligible)", value: initialStats?.avgMark || "0", icon: Award, color: "var(--accent-success)", trend: "" },
     { title: "Eligible Percentage", value: (initialStats?.passRate || "0") + "%", icon: GraduationCap, color: "var(--accent-success)", trend: "" },
     { title: "Not Eligible Students", value: initialStats?.notEligibleCount || "0", icon: TrendingDown, color: "var(--accent-danger)", trend: "" },
