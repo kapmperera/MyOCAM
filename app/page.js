@@ -3,6 +3,7 @@ import DashboardCards from "@/components/DashboardCards";
 import DashboardCharts from "@/components/DashboardCharts";
 import CatMarksAnalysis from "@/components/CatMarksAnalysis";
 import RecentModulesTable from "@/components/RecentModulesTable";
+import ExportReportButton from "@/components/ExportReportButton";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 
@@ -151,6 +152,18 @@ export default async function Home() {
 
   return (
     <div className={styles.dashboardContainer}>
+      <div className="print-only-header" style={{ borderBottom: "2px solid #333", paddingBottom: "16px", marginBottom: "24px" }}>
+        <h1 style={{ fontSize: "24px", fontWeight: "bold", margin: "0 0 6px 0", color: "#000000" }}>
+          Academic Dashboard General Executive Report
+        </h1>
+        <div style={{ fontSize: "14px", color: "#444444", lineHeight: "1.6" }}>
+          <strong>Course Code:</strong> {currentModule ? currentModule.courseCode : "All Modules"} &nbsp;|&nbsp;
+          <strong>Module Name:</strong> {currentModule ? currentModule.name : "All"} &nbsp;|&nbsp;
+          <strong>Academic Year:</strong> {currentModule ? currentModule.academicYear : "All"} <br />
+          <strong>Report Generation Date/Time:</strong> {new Date().toLocaleString()}
+        </div>
+      </div>
+
       <header className={styles.header}>
         <div>
           <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -173,7 +186,7 @@ export default async function Home() {
           <p className={styles.subtitle}>Welcome back, Admin. Here is the latest overview.</p>
         </div>
         <div className={styles.actions}>
-          <a href="/api/export/excel" className="btn-primary">Generate Report</a>
+          <ExportReportButton />
         </div>
       </header>
 

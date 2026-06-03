@@ -310,3 +310,46 @@ table tbody tr, .table tbody tr {
 table tbody tr:hover, .table tbody tr:hover {
   background-color: rgba(255, 255, 255, 0.02);
 }
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .sidebar-wrapper,
+  .mobile-header,
+  .sidebar-backdrop,
+  .btn-primary,
+  button,
+  .no-print,
+  a.btn-primary,
+  .actions {
+    display: none !important;
+  }
+  .main-content {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  .glass-panel {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #cccccc !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  h1, h2, h3, h4, p, span, td, th {
+    color: #000000 !important;
+  }
+}
+
+.print-only-header {
+  display: none !important;
+}
+
+@media print {
+  .print-only-header {
+    display: block !important;
+  }
+}
